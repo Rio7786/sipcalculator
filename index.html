@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SIP Calculator — Relitrade</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+:root {
+  --navy:   #012F7A;
+  --navy2:  #023394;
+  --green:  #4FA52B;
+  --green2: #3d8820;
+  --text:   #0f172a;
+  --sub:    #4b5563;
+  --muted:  #9ca3af;
+  --border: #dde3ef;
+  --bg:     #f0f4fb;
+  --card:   #ffffff;
+}
+body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); min-height:100vh; color:var(--text); }
+
+/* ══ TOP BAR ══════════════════════════════════════════════ */
+.topbar {
+  background:var(--navy);
+  padding:8px 48px;
+  display:flex; align-items:center; gap:18px;
+  font-size:12.5px; font-weight:600; color:rgba(255,255,255,.9);
+  letter-spacing:.1px;
+}
+.topbar a { color:inherit; text-decoration:none; transition:color .15s; }
+.topbar a:hover { color:#fff; }
+.topbar .sep { opacity:.3; font-size:14px; }
+
+/* ══ NAVBAR ═══════════════════════════════════════════════ */
+nav {
+  background:#fff;
+  border-bottom:1.5px solid var(--border);
+  padding:0 48px;
+  height:78px;
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:300;
+  box-shadow:0 2px 16px rgba(1,47,122,.07);
+}
+.nav-brand { display:flex; align-items:center; text-decoration:none; flex-shrink:0; }
+.nav-brand img { height:52px; width:auto; display:block; transition:opacity .2s; }
+.nav-brand img:hover { opacity:.88; }
+
+.nav-links { display:flex; align-items:center; gap:2px; }
+.nav-links a {
+  font-size:13px; font-weight:600; color:var(--sub);
+  text-decoration:none; padding:8px 12px; border-radius:7px;
+  transition:color .17s, background .17s; white-space:nowrap; position:relative;
+}
+.nav-links a:hover { color:var(--navy); background:#f0f4fb; }
+
+/* NEW badge */
+.badge-new {
+  display:inline-flex; align-items:center; justify-content:center;
+  background:var(--navy); color:#fff;
+  font-size:9px; font-weight:800; letter-spacing:.4px;
+  padding:2px 6px; border-radius:5px;
+  margin-left:5px; vertical-align:middle;
+  line-height:1.3;
+}
+
+.nav-sep { width:1px; height:30px; background:var(--border); margin:0 6px; flex-shrink:0; }
+
+.btn-nav-green {
+  background:var(--green) !important;
+  color:#fff !important;
+  padding:9px 20px !important;
+  border-radius:8px !important;
+  font-size:13px !important;
+  font-weight:700 !important;
+  box-shadow:0 2px 10px rgba(79,165,43,.28) !important;
+  transition:background .18s, transform .12s, box-shadow .18s !important;
+  white-space:nowrap !important;
+}
+.btn-nav-green:hover {
+  background:var(--green2) !important;
+  transform:translateY(-1px) !important;
+  box-shadow:0 4px 16px rgba(79,165,43,.38) !important;
+  color:#fff !important;
+}
+
+@media(max-width:960px){
+  nav { padding:0 18px; height:64px; }
+  .nav-brand img { height:42px; }
+  .topbar { padding:7px 18px; }
+  .nav-links { display:none; }
+}
+
+/* ══ PAGE ═════════════════════════════════════════════════ */
+.page { max-width:1140px; margin:0 auto; padding:52px 28px 100px; }
+
+.page-header { margin-bottom:36px; }
+.page-header h1 { font-size:33px; font-weight:800; color:var(--navy); letter-spacing:-.7px; line-height:1.15; }
+.page-header p { font-size:14.5px; color:var(--sub); margin-top:8px; font-weight:500; line-height:1.6; }
+
+/* ══ TABS ═════════════════════════════════════════════════ */
+.tabs {
+  display:flex; gap:3px;
+  background:#e4e9f5;
+  border-radius:14px; padding:4px;
+  width:fit-content; margin-bottom:30px;
+  border:1px solid var(--border);
+}
+.tab-btn {
+  padding:10px 30px; border-radius:11px;
+  font-size:13.5px; font-weight:700; font-family:inherit;
+  cursor:pointer; border:none; background:transparent; color:var(--sub);
+  transition:all .22s; letter-spacing:.1px;
+}
+.tab-btn.active {
+  background:var(--navy); color:#fff;
+  box-shadow:0 3px 14px rgba(1,47,122,.3);
+}
+.tab-btn:not(.active):hover { background:#d6dff5; color:var(--navy); }
+
+/* ══ GRID ═════════════════════════════════════════════════ */
+.calc-grid { display:grid; grid-template-columns:1fr 440px; gap:26px; align-items:start; }
+@media(max-width:920px){ .calc-grid { grid-template-columns:1fr; } .page { padding-top:32px; } }
+
+/* ══ CARD ═════════════════════════════════════════════════ */
+.card {
+  background:var(--card); border-radius:22px;
+  border:1.5px solid var(--border);
+  box-shadow:0 4px 28px rgba(1,47,122,.06), 0 1px 4px rgba(1,47,122,.04);
+  overflow:hidden; animation:fadeUp .42s cubic-bezier(.25,.46,.45,.94) both;
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+.results-card { animation-delay:.1s; }
+
+/* ══ INPUT CARD ═══════════════════════════════════════════ */
+.input-card { padding:30px 30px 22px; }
+
+.freq-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 18px; background:var(--bg); border-radius:12px;
+  border:1px solid var(--border); margin-bottom:18px;
+}
+.freq-label { font-size:13.5px; font-weight:600; color:var(--sub); }
+.freq-select {
+  border:1.5px solid var(--border); border-radius:8px;
+  padding:7px 34px 7px 14px; font-size:14px; font-weight:700; color:var(--navy);
+  font-family:inherit;
+  background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23012F7A' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+  appearance:none; cursor:pointer; outline:none; transition:border-color .2s, box-shadow .2s;
+}
+.freq-select:focus { border-color:var(--navy); box-shadow:0 0 0 3px rgba(1,47,122,.1); }
+
+.input-section {
+  background:var(--bg); border-radius:15px; border:1px solid var(--border);
+  padding:20px 22px; margin-bottom:14px; transition:box-shadow .2s, border-color .2s;
+}
+.input-section:focus-within,
+.input-section:hover { border-color:#aec3ea; box-shadow:0 3px 16px rgba(1,47,122,.08); }
+
+.input-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; }
+.input-name { font-size:13.5px; font-weight:600; color:var(--sub); }
+.input-val-wrap { display:flex; align-items:center; gap:5px; }
+.val-prefix { font-size:14px; font-weight:700; color:var(--muted); }
+.val-field {
+  width:116px; border:1.5px solid var(--border); border-radius:9px;
+  padding:7px 10px; font-size:14.5px; font-weight:800; color:var(--navy);
+  font-family:inherit; text-align:right; background:#fff; outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+.val-field:focus { border-color:var(--navy); box-shadow:0 0 0 3px rgba(1,47,122,.1); }
+.val-suffix { font-size:14px; font-weight:700; color:var(--muted); min-width:24px; }
+
+/* slider */
+.slider-wrap { padding:2px 0; }
+input[type=range] {
+  -webkit-appearance:none; width:100%; height:5px;
+  border-radius:5px; background:var(--border); outline:none; cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:22px; height:22px; border-radius:50%;
+  background:var(--navy); border:3px solid #fff;
+  box-shadow:0 2px 10px rgba(1,47,122,.38); cursor:grab;
+  transition:transform .14s, box-shadow .14s;
+}
+input[type=range]:active::-webkit-slider-thumb { cursor:grabbing; }
+input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.18); box-shadow:0 4px 18px rgba(1,47,122,.48); }
+.slider-range { display:flex; justify-content:space-between; margin-top:9px; font-size:11px; font-weight:600; color:var(--muted); }
+
+/* ══ RESULTS CARD ═════════════════════════════════════════ */
+.results-card { padding:0; }
+
+.results-top {
+  padding:30px 30px 24px;
+  border-bottom:1.5px solid var(--border);
+  background:linear-gradient(155deg, #f6f9ff 0%, #ffffff 55%);
+}
+.donut-area { display:flex; flex-direction:column; align-items:center; gap:20px; }
+
+.donut-wrap {
+  position:relative; width:216px; height:216px;
+  filter:drop-shadow(0 8px 28px rgba(1,47,122,.13));
+}
+#donut-canvas { display:block; border-radius:50%; }
+svg.donut { transform:rotate(-90deg); display:block; }
+
+/* Subtle gap between segments */
+.donut-wrap svg circle { stroke-dashoffset:0; }
+
+.donut-center {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  pointer-events:none;
+}
+.dc-label { font-size:10px; font-weight:700; color:var(--muted); letter-spacing:.7px; text-transform:uppercase; margin-bottom:3px; }
+.dc-value { font-size:24px; font-weight:800; color:var(--navy); letter-spacing:-.7px; line-height:1; }
+
+.legend-row { display:flex; gap:26px; }
+.leg { display:flex; align-items:center; gap:8px; }
+.leg-swatch { width:12px; height:12px; border-radius:3px; flex-shrink:0; }
+.leg-label { font-size:12px; font-weight:600; color:var(--sub); }
+
+/* ══ STATS ════════════════════════════════════════════════ */
+.results-bottom { padding:24px 30px 20px; }
+.res-stat {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:13px 0; border-bottom:1px dashed #e8edfa;
+}
+.res-stat:last-of-type { border-bottom:none; }
+.rsl { display:flex; align-items:center; gap:10px; font-size:13px; font-weight:600; color:var(--sub); }
+.rsw { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+.rsv { font-size:15px; font-weight:800; color:var(--navy); letter-spacing:-.2px; }
+.rsv.green { color:var(--green); }
+.rsv.total { font-size:20px; letter-spacing:-.5px; }
+
+/* ══ BAR ══════════════════════════════════════════════════ */
+.bar-section {
+  margin:6px 0 4px; background:var(--bg); border-radius:14px;
+  border:1px solid var(--border); padding:16px 20px;
+}
+.bar-labels { display:flex; justify-content:space-between; font-size:11.5px; font-weight:700; margin-bottom:10px; }
+.bll { color:var(--navy); }
+.blr { color:var(--green); }
+
+.bar-track { height:40px; border-radius:11px; overflow:hidden; display:flex; background:#e4e9f5; }
+.bar-inv-seg {
+  background:linear-gradient(90deg, #012F7A 0%, #1a4fad 100%);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:800; color:#fff; letter-spacing:.2px;
+  border-radius:11px 0 0 11px;
+  transition:width .75s cubic-bezier(.4,0,.2,1);
+  min-width:38px;
+}
+.bar-ret-seg {
+  background:linear-gradient(90deg, #4FA52B 0%, #63c234 100%);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:800; color:#fff; letter-spacing:.2px;
+  border-radius:0 11px 11px 0;
+  transition:width .75s cubic-bezier(.4,0,.2,1);
+  flex:1;
+}
+
+/* ══ CTA ══════════════════════════════════════════════════ */
+.cta-section { padding:4px 30px 30px; }
+.invest-btn {
+  width:100%; padding:17px;
+  background:linear-gradient(135deg, var(--green) 0%, var(--green2) 100%);
+  color:#fff; font-size:15.5px; font-weight:800; font-family:inherit;
+  border:none; border-radius:13px; cursor:pointer; letter-spacing:.5px;
+  transition:all .22s;
+  box-shadow:0 5px 20px rgba(79,165,43,.38);
+  text-decoration:none; display:block; text-align:center; line-height:1;
+}
+.invest-btn:hover { transform:translateY(-3px); box-shadow:0 10px 30px rgba(79,165,43,.48); filter:brightness(1.06); }
+.invest-btn:active { transform:translateY(0); }
+
+/* ══ FAQ ══════════════════════════════════════════════════ */
+.faq-section { margin-top:56px; }
+.faq-section h2 { font-size:25px; font-weight:800; color:var(--navy); margin-bottom:24px; letter-spacing:-.5px; }
+.faq-item {
+  background:#fff; border:1.5px solid var(--border); border-radius:15px;
+  margin-bottom:10px; overflow:hidden; transition:box-shadow .2s, border-color .2s;
+}
+.faq-item:hover { border-color:#aec3ea; box-shadow:0 3px 16px rgba(1,47,122,.07); }
+.faq-q {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:19px 24px; cursor:pointer; gap:14px;
+  font-size:14px; font-weight:700; color:var(--navy); user-select:none;
+}
+.faq-icon {
+  width:28px; height:28px; border-radius:50%; flex-shrink:0;
+  background:var(--bg); border:1.5px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:19px; line-height:1; color:var(--navy); font-weight:300;
+  transition:transform .3s, background .22s, border-color .22s, color .22s;
+}
+.faq-item.open .faq-icon { transform:rotate(45deg); background:var(--navy); border-color:var(--navy); color:#fff; }
+.faq-a {
+  max-height:0; overflow:hidden;
+  transition:max-height .42s cubic-bezier(.4,0,.2,1), padding .3s;
+  font-size:13.5px; line-height:1.82; color:var(--sub); padding:0 24px;
+}
+.faq-item.open .faq-a { max-height:640px; padding:0 24px 24px; }
+.faq-formula {
+  background:var(--bg); border:1px solid var(--border); border-radius:11px;
+  padding:15px 22px; margin:14px 0;
+  font-family:'Courier New',monospace; font-size:15px; color:var(--navy); font-weight:700;
+}
+.faq-a strong { color:var(--navy); }
+.faq-a a { color:var(--green); font-weight:700; text-decoration:none; }
+.faq-a a:hover { text-decoration:underline; }
+
+/* ══ FOOTER ═══════════════════════════════════════════════ */
+footer {
+  background:var(--navy); color:rgba(255,255,255,.72);
+  padding:28px 48px; text-align:center; font-size:13px; font-weight:500; line-height:1.8;
+}
+footer a { color:rgba(255,255,255,.88); text-decoration:none; }
+footer a:hover { color:#fff; text-decoration:underline; }
+.footer-disc { margin-top:8px; font-size:11.5px; opacity:.5; }
+
+/* ══ MOBILE HAMBURGER ═════════════════════════════════════ */
+.ham { display:none; }
+@media(max-width:960px){
+  .ham {
+    display:flex; align-items:center; justify-content:center;
+    width:38px; height:38px; border:none; background:var(--bg); border-radius:8px; cursor:pointer;
+    flex-direction:column; gap:5px; padding:0;
+  }
+  .ham span { display:block; width:20px; height:2px; background:var(--navy); border-radius:2px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ TOP BAR ═══════════════════════════════════════════ -->
+<div class="topbar">
+  <a href="tel:+917968199999">📞 &nbsp;+91 7968199999</a>
+  <span class="sep">|</span>
+  <a href="mailto:wecare@relitrade.in">✉ &nbsp;wecare@relitrade.in</a>
+</div>
+
+<!-- ═══ NAVBAR ════════════════════════════════════════════ -->
+<nav>
+  <a class="nav-brand" href="https://relitrade.in/" target="_blank" rel="noopener" aria-label="Relitrade home">
+    <img
+      src="https://www.relitrade.in/wp-content/uploads/2024/09/Logo-Relitrade-stock.svg"
+      alt="Relitrade — We care about your investment"
+      onerror="this.src='';this.alt='RELITRADE';"
+    />
+  </a>
+
+  <div class="nav-links">
+    <a href="https://rtrade.relitrade.in:28001/" target="_blank" rel="noopener">Trading Platform <span class="badge-new">NEW</span></a>
+    <a href="https://relitrade.in/" target="_blank" rel="noopener">Stocks</a>
+    <a href="https://relitrade.in/mutual-fund/" target="_blank" rel="noopener">Mutual Funds</a>
+    <a href="https://calc.relitrade.in/" target="_blank" rel="noopener">Tools</a>
+    <a href="https://relitrade.in/work-with-us/" target="_blank" rel="noopener">Become a Partner</a>
+    <div class="nav-sep"></div>
+    <a href="https://calc.relitrade.in/" target="_blank" rel="noopener" class="btn-nav-green">Calculator</a>
+    <a href="https://myportal.relitrade.in/ekyc-signup?refid=ho" target="_blank" rel="noopener" class="btn-nav-green">Open an Account</a>
+
+  </div>
+
+  <button class="ham" aria-label="Menu" onclick="this.nextElementSibling&&(this.nextElementSibling.style.display='block')">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ═══ PAGE ══════════════════════════════════════════════ -->
+<div class="page">
+
+  <div class="page-header">
+    <h1>SIP Calculator</h1>
+    <p>Plan your wealth journey — estimate returns on your Systematic Investment Plan</p>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(this,'sip')">SIP</button>
+    <button class="tab-btn" onclick="switchTab(this,'lumpsum')">Lumpsum</button>
+    <button class="tab-btn" onclick="switchTab(this,'goal')">Goal SIP</button>
+  </div>
+
+  <div class="calc-grid">
+
+    <!-- ─── LEFT: INPUTS ──────────────────────────────── -->
+    <div class="card input-card">
+
+      <!-- Frequency (SIP only) -->
+      <div class="freq-row" id="freq-row">
+        <span class="freq-label">Frequency</span>
+        <select class="freq-select" id="freq-select" onchange="calcAndUpdate()">
+          <option value="12">Monthly</option>
+          <option value="4">Quarterly</option>
+          <option value="2">Half-Yearly</option>
+          <option value="1">Yearly</option>
+        </select>
+      </div>
+
+      <!-- Amount -->
+      <div class="input-section">
+        <div class="input-row">
+          <span class="input-name" id="amount-label">SIP amount</span>
+          <div class="input-val-wrap">
+            <span class="val-prefix">₹</span>
+            <input type="number" class="val-field" id="amount-field" value="25000" min="500" max="10000000" onchange="fieldChanged('amount')"/>
+          </div>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="amount-slider" min="500" max="500000" step="500" value="25000" oninput="sliderChanged('amount')"/>
+          <div class="slider-range"><span id="amount-min">₹500</span><span id="amount-max">₹5,00,000</span></div>
+        </div>
+      </div>
+
+      <!-- Duration -->
+      <div class="input-section">
+        <div class="input-row">
+          <span class="input-name">Investment duration</span>
+          <div class="input-val-wrap">
+            <input type="number" class="val-field" id="dur-field" value="10" min="1" max="40" style="width:88px" onchange="fieldChanged('dur')"/>
+            <span class="val-suffix">yr</span>
+          </div>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="dur-slider" min="1" max="40" step="1" value="10" oninput="sliderChanged('dur')"/>
+          <div class="slider-range"><span>1 yr</span><span>40 yr</span></div>
+        </div>
+      </div>
+
+      <!-- Return Rate -->
+      <div class="input-section">
+        <div class="input-row">
+          <span class="input-name">Expected rate of return</span>
+          <div class="input-val-wrap">
+            <input type="number" class="val-field" id="rate-field" value="12" min="1" max="30" step="0.5" style="width:88px" onchange="fieldChanged('rate')"/>
+            <span class="val-suffix">%</span>
+          </div>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="rate-slider" min="1" max="30" step="0.5" value="12" oninput="sliderChanged('rate')"/>
+          <div class="slider-range"><span>1%</span><span>30%</span></div>
+        </div>
+      </div>
+
+      <!-- Goal Target (Goal SIP only) -->
+      <div class="input-section" id="goal-section" style="display:none">
+        <div class="input-row">
+          <span class="input-name">Target corpus</span>
+          <div class="input-val-wrap">
+            <span class="val-prefix">₹</span>
+            <input type="number" class="val-field" id="goal-field" value="10000000" min="10000" max="1000000000" onchange="fieldChanged('goal')"/>
+          </div>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="goal-slider" min="10000" max="100000000" step="10000" value="10000000" oninput="sliderChanged('goal')"/>
+          <div class="slider-range"><span>₹10K</span><span>₹10Cr</span></div>
+        </div>
+      </div>
+
+    </div><!-- /input-card -->
+
+    <!-- ─── RIGHT: RESULTS ────────────────────────────── -->
+    <div class="card results-card">
+
+      <!-- Donut chart -->
+      <div class="results-top">
+        <div class="donut-area">
+          <div class="donut-wrap">
+            <canvas id="donut-canvas" width="216" height="216"></canvas>
+            <div class="donut-center">
+              <span class="dc-label">Total Value</span>
+              <span class="dc-value" id="donut-val">₹56.0L</span>
+            </div>
+          </div>
+
+          <div class="legend-row">
+            <div class="leg">
+              <div class="leg-swatch" style="background:#012F7A"></div>
+              <span class="leg-label">Invested amount</span>
+            </div>
+            <div class="leg">
+              <div class="leg-swatch" style="background:#4FA52B"></div>
+              <span class="leg-label">Est. returns</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat rows -->
+      <div class="results-bottom">
+        <div class="res-stat">
+          <span class="rsl">
+            <span class="rsw" style="background:#012F7A"></span>
+            <span id="invested-label">Invested amount</span>
+          </span>
+          <span class="rsv" id="res-invested">₹30,00,000</span>
+        </div>
+        <div class="res-stat" id="est-returns-row">
+          <span class="rsl">
+            <span class="rsw" style="background:#4FA52B"></span>
+            Est. returns
+          </span>
+          <span class="rsv green" id="res-returns">₹26,00,897</span>
+        </div>
+        <div class="res-stat">
+          <span class="rsl" style="font-weight:800; color:var(--navy)">
+            <span class="rsw" style="background:var(--navy)"></span>
+            <span id="total-label">Total value</span>
+          </span>
+          <span class="rsv total" id="res-total">₹56,00,897</span>
+        </div>
+
+        <!-- Proportion bar -->
+        <div class="bar-section">
+          <div class="bar-labels">
+            <span class="bll" id="bar-pct-inv">51% Invested</span>
+            <span class="blr" id="bar-pct-ret">49% Returns</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-inv-seg" id="bar-inv" style="width:51%">51%</div>
+            <div class="bar-ret-seg" id="bar-ret">49%</div>
+          </div>
+        </div>
+      </div><!-- /results-bottom -->
+
+      <!-- CTA -->
+      <div class="cta-section">
+        <a href="https://relitrade.in/" target="_blank" rel="noopener" class="invest-btn">
+          START INVESTING NOW &nbsp;&rarr;
+        </a>
+      </div>
+
+    </div><!-- /results-card -->
+  </div><!-- /calc-grid -->
+
+  <!-- ═══ FAQ ════════════════════════════════════════════ -->
+  <div class="faq-section">
+    <h2>Frequently Asked Questions</h2>
+
+    <div class="faq-item open">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        How is the growth of investment calculated for SIPs?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        <p>The formula for calculating the future value of a SIP is:</p>
+        <div class="faq-formula">FV = P &times; { [(1 + r)ⁿ &minus; 1] / r } &times; (1 + r)</div>
+        <p><strong>Where:</strong><br/>
+        FV = Future value of your investment<br/>
+        P = Periodic investment amount<br/>
+        r = Expected annual return &divide; frequency<br/>
+        n = Total number of investment periods</p><br/>
+        <p><strong>Example:</strong> Invest ₹5,000 every month for 40 years at 12% p.a. → portfolio grows to approximately <strong>₹5,94,12,101</strong>.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        What does the Goal SIP calculator do?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        <p>The Goal SIP calculator works in reverse — enter your <strong>target corpus</strong> (e.g. ₹1 Crore), the time horizon, and expected return rate. It instantly calculates the <strong>exact monthly SIP amount</strong> you need to start investing today to reach that goal.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        How do I know what return rate to enter?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        <p>Base it on the asset class you plan to invest in. For <strong>equity mutual funds</strong>, 10–14% p.a. is a common historical benchmark. For <strong>debt funds</strong>, 6–8% is more realistic. Your investment advisor at Relitrade can suggest the right rate for your specific portfolio and risk profile.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Is SIP better than a Lumpsum investment?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        <p>Both strategies have their merits. SIPs benefit from <strong>rupee cost averaging</strong> — you automatically buy more units when markets are lower and fewer when they are higher, reducing your average cost over time. Lumpsum works best when markets are near a cyclical low. For most retail investors, SIP is recommended for its built-in discipline and reduced market-timing risk.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Can I start a SIP with Relitrade?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        <p>Absolutely! <a href="https://myportal.relitrade.in/ekyc-signup?refid=ho" target="_blank">Open your free account</a> in minutes with paperless eKYC and start investing in mutual funds from as little as ₹500/month. Explore all available schemes at <a href="https://relitrade.in/mutual-fund/" target="_blank">Relitrade Mutual Funds</a>.</p>
+      </div>
+    </div>
+
+  </div><!-- /faq-section -->
+</div><!-- /page -->
+
+<!-- ═══ FOOTER ══════════════════════════════════════════ -->
+<footer>
+  <p>
+    &copy; 2026 Relitrade &nbsp;&bull;&nbsp;
+    <a href="https://relitrade.in/" target="_blank">www.relitrade.in</a>
+    &nbsp;&bull;&nbsp;
+    <a href="mailto:wecare@relitrade.in">wecare@relitrade.in</a>
+    &nbsp;&bull;&nbsp;
+    <a href="tel:+917968199999">+91 7968199999</a>
+  </p>
+  <p class="footer-disc">Investments are subject to market risks. Please read all scheme-related documents carefully before investing.</p>
+</footer>
+
+<script>
+/* ─── STATE ───────────────────────────────────────────── */
+const S = { mode:'sip', freq:12, amount:25000, dur:10, rate:12, goal:10000000 };
+
+/* ─── CALCULATIONS ────────────────────────────────────── */
+function calcSIP() {
+  const n = S.dur * S.freq;
+  const r = (S.rate / 100) / S.freq;
+  const inv = S.amount * n;
+  const tot = r > 0 ? S.amount * ((Math.pow(1+r,n)-1)/r) * (1+r) : inv;
+  return { invested:inv, returns:tot-inv, total:tot };
+}
+function calcLumpsum() {
+  const inv = S.amount;
+  const tot = inv * Math.pow(1 + S.rate/100, S.dur);
+  return { invested:inv, returns:tot-inv, total:tot };
+}
+function calcGoal() {
+  const n = S.dur * 12;
+  const r = (S.rate / 100) / 12;
+  const fac = r > 0 ? ((Math.pow(1+r,n)-1)/r) * (1+r) : n;
+  const req = S.goal / fac;
+  const inv = req * n;
+  return { invested:inv, returns:S.goal-inv, total:S.goal, required:req };
+}
+function calc() {
+  return S.mode==='sip' ? calcSIP() : S.mode==='lumpsum' ? calcLumpsum() : calcGoal();
+}
+
+/* ─── FORMAT ──────────────────────────────────────────── */
+function fmtINR(n) { return '₹' + Math.round(n).toLocaleString('en-IN'); }
+function fmtShort(n) {
+  if (n >= 1e7)  return '₹' + (n/1e7).toFixed(2) + 'Cr';
+  if (n >= 1e5)  return '₹' + (n/1e5).toFixed(1) + 'L';
+  if (n >= 1e3)  return '₹' + (n/1e3).toFixed(1) + 'K';
+  return '₹' + Math.round(n);
+}
+
+/* ─── ANIMATED COUNTER ────────────────────────────────── */
+const ctrs = {};
+function animateVal(id, target) {
+  if (ctrs[id]) cancelAnimationFrame(ctrs[id]);
+  const el = document.getElementById(id);
+  const start = parseFloat(el.dataset.raw || target);
+  el.dataset.raw = target;
+  const DUR = 700, t0 = performance.now();
+  function step(t) {
+    const p = Math.min((t-t0)/DUR, 1);
+    const e = 1 - Math.pow(1-p, 3);
+    el.textContent = fmtINR(start + (target-start)*e);
+    if (p < 1) ctrs[id] = requestAnimationFrame(step);
+    else el.textContent = fmtINR(target);
+  }
+  ctrs[id] = requestAnimationFrame(step);
+}
+
+/* ─── CANVAS DONUT ────────────────────────────────────── */
+const canvas  = document.getElementById('donut-canvas');
+const ctx     = canvas.getContext('2d');
+const CX = 108, CY = 108, R = 78, STROKE = 28;
+const GAP_RAD = 0.03; // small gap between segments in radians
+
+// Current animated fractions
+let donutCur = { inv: 1.0, ret: 0.0 };
+let donutTgt = { inv: 1.0, ret: 0.0 };
+let donutRaf = null;
+let donutT0  = null;
+
+function drawDonut(inv, ret) {
+  const dpr = window.devicePixelRatio || 1;
+  // Make canvas crisp on retina
+  if (canvas.dataset.sized !== '1') {
+    canvas.width  = 216 * dpr;
+    canvas.height = 216 * dpr;
+    canvas.style.width  = '216px';
+    canvas.style.height = '216px';
+    ctx.scale(dpr, dpr);
+    canvas.dataset.sized = '1';
+  }
+
+  ctx.clearRect(0, 0, 216, 216);
+
+  const TAU    = 2 * Math.PI;
+  const start  = -Math.PI / 2; // 12 o'clock
+
+  // ── BG track ring ──
+  ctx.beginPath();
+  ctx.arc(CX, CY, R, 0, TAU);
+  ctx.strokeStyle = '#e8ecf8';
+  ctx.lineWidth   = STROKE;
+  ctx.lineCap     = 'butt';
+  ctx.stroke();
+
+  const total = inv + ret;
+  if (total <= 0) return;
+
+  const invAng = (inv / total) * TAU;
+  const retAng = (ret / total) * TAU;
+
+  // ── NAVY segment (Invested) ──
+  if (inv > 0) {
+    const s = start + GAP_RAD / 2;
+    const e = start + invAng - GAP_RAD / 2;
+    if (e > s) {
+      ctx.beginPath();
+      ctx.arc(CX, CY, R, s, e);
+      const grad1 = ctx.createLinearGradient(
+        CX + R * Math.cos(s), CY + R * Math.sin(s),
+        CX + R * Math.cos(e), CY + R * Math.sin(e)
+      );
+      grad1.addColorStop(0, '#012F7A');
+      grad1.addColorStop(1, '#1a4fad');
+      ctx.strokeStyle = grad1;
+      ctx.lineWidth   = STROKE;
+      ctx.lineCap     = 'round';
+      ctx.stroke();
+    }
+  }
+
+  // ── GREEN segment (Returns) ──
+  if (ret > 0) {
+    const s = start + invAng + GAP_RAD / 2;
+    const e = start + invAng + retAng - GAP_RAD / 2;
+    if (e > s) {
+      ctx.beginPath();
+      ctx.arc(CX, CY, R, s, e);
+      const grad2 = ctx.createLinearGradient(
+        CX + R * Math.cos(s), CY + R * Math.sin(s),
+        CX + R * Math.cos(e), CY + R * Math.sin(e)
+      );
+      grad2.addColorStop(0, '#4FA52B');
+      grad2.addColorStop(1, '#68d032');
+      ctx.strokeStyle = grad2;
+      ctx.lineWidth   = STROKE;
+      ctx.lineCap     = 'round';
+      ctx.stroke();
+    }
+  }
+}
+
+function animateDonut(targetInv, targetRet) {
+  donutTgt = { inv: targetInv, ret: targetRet };
+  const fromInv = donutCur.inv, fromRet = donutCur.ret;
+  if (donutRaf) cancelAnimationFrame(donutRaf);
+  donutT0 = performance.now();
+  const DUR = 750;
+
+  function step(t) {
+    const p = Math.min((t - donutT0) / DUR, 1);
+    const e = p < 1 ? 1 - Math.pow(1-p, 3) : 1; // ease-out-cubic
+    const curInv = fromInv + (donutTgt.inv - fromInv) * e;
+    const curRet = fromRet + (donutTgt.ret - fromRet) * e;
+    donutCur = { inv: curInv, ret: curRet };
+    drawDonut(curInv, curRet);
+    if (p < 1) donutRaf = requestAnimationFrame(step);
+    else { donutCur = { ...donutTgt }; drawDonut(donutTgt.inv, donutTgt.ret); }
+  }
+  donutRaf = requestAnimationFrame(step);
+}
+
+/* Entry animation on load */
+function donutEntryAnimation(finalInv, finalRet) {
+  if (donutRaf) cancelAnimationFrame(donutRaf);
+  donutT0 = performance.now();
+  const DUR = 1100;
+  function step(t) {
+    const p = Math.min((t - donutT0) / DUR, 1);
+    const e = 1 - Math.pow(1-p, 4); // ease-out-quart — nice sweep
+    drawDonut(finalInv * e, finalRet * e);
+    if (p < 1) donutRaf = requestAnimationFrame(step);
+    else { donutCur = { inv: finalInv, ret: finalRet }; drawDonut(finalInv, finalRet); }
+  }
+  donutRaf = requestAnimationFrame(step);
+}
+
+/* ─── UPDATE UI ───────────────────────────────────────── */
+let firstRender = true;
+function updateUI() {
+  const { invested, returns, total, required } = calc();
+
+  animateVal('res-invested', invested);
+  animateVal('res-returns',  returns);
+  animateVal('res-total',    total);
+  document.getElementById('donut-val').textContent = fmtShort(total);
+
+  /* donut */
+  const invF = invested / total;
+  const retF = returns  / total;
+  if (firstRender) {
+    firstRender = false;
+    donutCur = { inv: 0, ret: 0 };
+    donutEntryAnimation(invF, retF);
+  } else {
+    animateDonut(invF, retF);
+  }
+
+  /* bar */
+  const invP = Math.round(invF * 100), retP = 100 - invP;
+  const barInv = document.getElementById('bar-inv');
+  const barRet = document.getElementById('bar-ret');
+  barInv.style.width = invP + '%';
+  barInv.textContent = invP + '%';
+  barRet.textContent = retP + '%';
+  document.getElementById('bar-pct-inv').textContent = invP + '% Invested';
+  document.getElementById('bar-pct-ret').textContent = retP + '% Returns';
+
+  /* labels */
+  if (S.mode === 'goal' && required) {
+    document.getElementById('res-invested').textContent = fmtINR(required) + '/mo';
+    document.getElementById('invested-label').textContent = 'Required SIP';
+    document.getElementById('total-label').textContent   = 'Target corpus';
+  } else {
+    document.getElementById('invested-label').textContent = 'Invested amount';
+    document.getElementById('total-label').textContent   = 'Total value';
+  }
+}
+
+/* ─── SLIDER FILL ─────────────────────────────────────── */
+function fillSlider(id) {
+  const el = document.getElementById(id+'-slider');
+  if (!el) return;
+  const pct = ((+el.value - +el.min) / (+el.max - +el.min)) * 100;
+  el.style.background = `linear-gradient(to right,#012F7A ${pct}%,#dde3ef ${pct}%)`;
+}
+
+/* ─── SYNC ────────────────────────────────────────────── */
+function sliderChanged(key) {
+  const v = parseFloat(document.getElementById(key+'-slider').value);
+  S[key==='amount'?'amount':key==='dur'?'dur':key==='rate'?'rate':'goal'] = v;
+  const f = document.getElementById(key+'-field');
+  if (f) f.value = v;
+  fillSlider(key); updateUI();
+}
+function fieldChanged(key) {
+  const v = parseFloat(document.getElementById(key+'-field').value) || 0;
+  S[key==='amount'?'amount':key==='dur'?'dur':key==='rate'?'rate':'goal'] = v;
+  const s = document.getElementById(key+'-slider');
+  if (s) s.value = Math.min(Math.max(v, +s.min), +s.max);
+  fillSlider(key); updateUI();
+}
+function calcAndUpdate() { S.freq = parseInt(document.getElementById('freq-select').value); updateUI(); }
+
+/* ─── TABS ────────────────────────────────────────────── */
+function switchTab(btn, mode) {
+  S.mode = mode;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const isSIP = mode==='sip', isGoal = mode==='goal', isLump = mode==='lumpsum';
+  document.getElementById('freq-row').style.display        = isSIP  ? '' : 'none';
+  document.getElementById('goal-section').style.display    = isGoal ? '' : 'none';
+  document.getElementById('est-returns-row').style.display = isGoal ? 'none' : '';
+  const lbl = document.getElementById('amount-label');
+  const sl  = document.getElementById('amount-slider');
+  const mx  = document.getElementById('amount-max');
+  if (isLump) { lbl.textContent='Lumpsum amount'; sl.max=10000000; sl.step=10000; mx.textContent='₹1Cr'; }
+  else        { lbl.textContent=isGoal?'Monthly SIP amount':'SIP amount'; sl.max=500000; sl.step=500; mx.textContent='₹5,00,000'; }
+  fillSlider('amount'); updateUI();
+}
+
+/* ─── FAQ ─────────────────────────────────────────────── */
+function toggleFaq(el) { el.parentElement.classList.toggle('open'); }
+
+/* ─── INIT ────────────────────────────────────────────── */
+['amount','dur','rate','goal'].forEach(fillSlider);
+updateUI();
+</script>
+</body>
+</html>
